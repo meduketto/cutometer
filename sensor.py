@@ -30,24 +30,24 @@ def euler(q):
 
 
 class State:
-    def __init__(self, device):
+    def __init__(self, device, signaller):
         self.device = device
-        self.samples = 0
         self.callback = FnVoid_VoidP_DataP(self.data_handler)
+        self.signaller = signaller
 
     def data_handler(self, ctx, data):
         d = parse_value(data)
         q1 = Quaternion(d.w, d.x, d.y, d.z)
         y,p,r = euler(q1)
-        print(y,p,r)
+        self.signaller.sensor_signal.emit(y,p,r)
+        #print(y,p,r)
         #print("%s\t%s\t%s\t%s\n" % (str(d.w), str(d.x), str(d.y), str(d.z)))
-        self.samples+= 1
 
 
 class Sensor:
-    def __init__(self, mac_addr):
+    def __init__(self, mac_addr, signaller):
         self.dev = MetaWear(mac_addr)
-        self.s = State(self.dev)
+        self.s = State(self.dev, signaller)
 
 
     def connect(self):
