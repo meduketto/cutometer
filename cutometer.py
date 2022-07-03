@@ -7,6 +7,7 @@ import random
 from PySide6 import QtCore, QtWidgets, QtGui
 
 import sensor
+import streamview
 
 
 class Signaller(QtCore.QObject):
@@ -22,28 +23,30 @@ class MyWidget(QtWidgets.QWidget):
         self.my_sensor.connect()
         self.my_signaller.sensor_signal.connect(self.sensor_update)
 
+        self.my_speed = streamview.StreamView()
+
         self.hello = ["Hallo Welt", "Hei maailma", "Hola Mundo", "Привет мир"]
 
-        self.button = QtWidgets.QPushButton("Click me!")
         self.text = QtWidgets.QLabel("Hello World",
                                      alignment=QtCore.Qt.AlignCenter)
 
         self.layout = QtWidgets.QVBoxLayout(self)
+        self.layout.addWidget(self.my_speed)
         self.layout.addWidget(self.text)
-        self.layout.addWidget(self.button)
 
-        self.button.clicked.connect(self.magic)
 
     @QtCore.Slot()
     def sensor_update(self, y, p, r):
         self.text.setText(str(round(y,4)))
+        s = self.my_speed
+        s.my_data.append(y)
+        s.update()
+        if len(s.my_data) >= 2000:
+            s.my_data = s.my_data[-2000:]
         #print(y,p,r)
 
-    @QtCore.Slot()
-    def magic(self):
-        self.text.setText(random.choice(self.hello))
+    def closeEvent(self, event):
         self.my_sensor.disconnect()
-        sys.exit(0)
 
 
 def main(args):
