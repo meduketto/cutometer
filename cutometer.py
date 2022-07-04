@@ -1,13 +1,18 @@
 
 #!/usr/bin/python
 
-import sys
 import random
+import sys
+import time
 
 from PySide6 import QtCore, QtWidgets, QtGui
 
 import sensor
 import streamview
+
+
+def get_msec():
+    return time.clock_gettime_ns(time.CLOCK_MONOTONIC) * 1000000
 
 
 class Signaller(QtCore.QObject):
@@ -23,27 +28,33 @@ class MyWidget(QtWidgets.QWidget):
         self.my_sensor.connect()
         self.my_signaller.sensor_signal.connect(self.sensor_update)
 
+        self.grid = QtWidgets.QGridLayout(self)
+
+        self.L1 = QtWidgets.QLabel("Cut speed", alignment=QtCore.Qt.AlignRight)
+        self.grid.addWidget(self.L1, 0, 0)
         self.my_speed = streamview.StreamView()
+        self.grid.addWidget(self.my_speed, 0, 1)
 
-        self.hello = ["Hallo Welt", "Hei maailma", "Hola Mundo", "Привет мир"]
+        self.last_t = get_msec()
+        self.last_v = 0
 
-        self.text = QtWidgets.QLabel("Hello World",
-                                     alignment=QtCore.Qt.AlignCenter)
+        self.L2 = QtWidgets.QLabel("Edge", alignment=QtCore.Qt.AlignRight)
+        self.grid.addWidget(self.L2, 1, 0)
+        self.my_edge = streamview.StreamView()
+        self.grid.addWidget(self.my_edge, 1, 1)
 
-        self.layout = QtWidgets.QVBoxLayout(self)
-        self.layout.addWidget(self.my_speed)
-        self.layout.addWidget(self.text)
-
+        self.last_edge = 0
 
     @QtCore.Slot()
     def sensor_update(self, y, p, r):
-        self.text.setText(str(round(y,4)))
-        s = self.my_speed
-        s.my_data.append(y)
-        s.update()
-        if len(s.my_data) >= 2000:
-            s.my_data = s.my_data[-2000:]
-        #print(y,p,r)
+        t = get_msec()
+        speed = (y-self.last_v) / (t - self.last_t)
+        self.my_speed.addData(speed)
+        self.last_t = t
+        self.last_v = y
+        self.my_edge.addData(p - self.last_edge)
+        self.last_edge = p
+        print(y,p,r)
 
     def closeEvent(self, event):
         self.my_sensor.disconnect()
