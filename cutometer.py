@@ -11,7 +11,7 @@ import streamview
 
 
 def get_msec():
-    return time.clock_gettime_ns(time.CLOCK_MONOTONIC) * 1000000
+    return time.clock_gettime_ns(time.CLOCK_MONOTONIC) / 1000000
 
 
 class Signaller(QtCore.QObject):
@@ -37,23 +37,34 @@ class MyWidget(QtWidgets.QWidget):
         self.last_t = get_msec()
         self.last_v = 0
 
-        self.L2 = QtWidgets.QLabel("Edge", alignment=QtCore.Qt.AlignRight)
+        self.L2= QtWidgets.QLabel("Max speed", alignment=QtCore.Qt.AlignRight)
         self.grid.addWidget(self.L2, 1, 0)
+
+        self.max_speed= QtWidgets.QLabel("0", alignment=QtCore.Qt.AlignLeft)
+        self.grid.addWidget(self.max_speed, 1, 1)
+        self.max_speed_v = 0
+
+        self.L3 = QtWidgets.QLabel("Edge", alignment=QtCore.Qt.AlignRight)
+        self.grid.addWidget(self.L3, 2, 0)
         self.my_edge = streamview.StreamView()
-        self.grid.addWidget(self.my_edge, 1, 1)
+        self.grid.addWidget(self.my_edge, 2, 1)
 
         self.last_edge = 0
 
     @QtCore.Slot()
     def sensor_update(self, y, p, r):
         t = get_msec()
-        speed = (y-self.last_v) / (t - self.last_t)
+        sfact = 10
+        speed = (y-self.last_v) * sfact/ (t - self.last_t)
+        if speed > self.max_speed_v:
+            self.max_speed_v = speed
+            self.max_speed.setText(str(round(self.max_speed_v,4)))
         self.my_speed.addData(speed)
         self.last_t = t
         self.last_v = y
         self.my_edge.addData(p - self.last_edge)
         self.last_edge = p
-        print(y,p,r)
+        #print(y,p,r)
 
     def closeEvent(self, event):
         self.my_sensor.disconnect()

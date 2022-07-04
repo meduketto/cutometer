@@ -43,6 +43,9 @@ entirely missing and requires code changes.
 Edge alignment detection only tracks relative changes during the movement.
 Alignment between cut path and the edge is not calculated.
 
+Speed graph depends on the sampling frequency rather than explicitly using
+the clock time for X axis.
+
 Recording of the data is missing too.
 
 ## License
