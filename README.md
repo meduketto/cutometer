@@ -30,7 +30,7 @@ You need Python3 with PySide6, pyquaternion and MetaWear Python SDK installed.
 
 ## Usage
 
-cutometer.py <macaddrofsensor>
+`cutometer.py <macaddrofsensor>`
 
 You can get the mac addr from "hcitool lescan" (on Linux) output or a similar
 command on your operating system.
